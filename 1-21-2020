@@ -1,0 +1,396 @@
+package achy.me.bedwars;
+
+import org.bukkit.ChatColor;
+import org.bukkit.Chunk;
+import org.bukkit.Material;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerEggThrowEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.*;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.Arrays;
+import java.util.HashMap;
+
+public final class BEDWARS extends JavaPlugin implements Listener {
+    HashMap<String,int[]> itemprices= new HashMap<>();
+    HashMap<Player, Boolean> hasaxe = new HashMap<>();
+    HashMap<Player, Boolean> haspick = new HashMap<>();
+    HashMap<Player, Boolean> hasshield = new HashMap<>();
+    HashMap<Player, Boolean> hasshears = new HashMap<>();
+    HashMap<Player, ItemStack[]> armor = new HashMap<>();
+
+    @Override
+    public void onEnable() {
+        getServer().getPluginManager().registerEvents(this,this);
+        System.out.println("hello");
+        for(Player p: getServer().getOnlinePlayers()){
+            ItemStack[] stack = { new ItemStack(Material.LEATHER_BOOTS),
+                    new ItemStack(Material.LEATHER_LEGGINGS),
+                    new ItemStack(Material.LEATHER_CHESTPLATE),
+                    new ItemStack(Material.LEATHER_HELMET), };
+            hasaxe.put(p,false);
+            haspick.put(p,false);
+            hasshield.put(p,false);
+            hasshears.put(p,false);
+            armor.put(p,stack);
+            ItemStack[] parm = armor.get(p);
+            p.getInventory().setBoots(parm[0]);
+            p.getInventory().setLeggings(parm[1]);
+            p.getInventory().setChestplate(parm[2]);
+            p.getInventory().setHelmet(parm[3]);
+            p.getInventory().addItem(new ItemStack(Material.WOODEN_SWORD,1));
+
+        }
+        for(Chunk c : getServer().getWorld("world").getLoadedChunks()){
+            for(BlockState b : c.getTileEntities()){
+                if(b instanceof Container){
+                    //BLOCKS
+                    ((Container) b).getInventory().setItem(0,new ItemStack(Material.WHITE_WOOL,16));
+                    itemprices.put((new ItemStack(Material.WHITE_WOOL,16)).toString(),new int[]{4, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(1,new ItemStack(Material.CLAY,16));
+                    itemprices.put((new ItemStack(Material.CLAY,16)).toString(),new int[]{12, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(2,new ItemStack(Material.OAK_PLANKS,16));
+                    itemprices.put((new ItemStack(Material.OAK_PLANKS,16)).toString(),new int[]{Integer.MAX_VALUE, 4,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(3,new ItemStack(Material.END_STONE,12));
+                    itemprices.put((new ItemStack(Material.END_STONE,12)).toString(),new int[]{24, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(4,new ItemStack(Material.GLASS,4));
+                    itemprices.put((new ItemStack(Material.GLASS,4)).toString(),new int[]{12, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(5,new ItemStack(Material.LADDER,16));
+                    itemprices.put((new ItemStack(Material.LADDER,16)).toString(),new int[]{4, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(6,new ItemStack(Material.OBSIDIAN,4));
+                    itemprices.put((new ItemStack(Material.OBSIDIAN,4)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    ((Container) b).getInventory().setItem(7,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(8,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    //SWORDS
+                    ((Container) b).getInventory().setItem(9,new ItemStack(Material.STONE_SWORD,1));
+                    itemprices.put((new ItemStack(Material.STONE_SWORD,1)).toString(),new int[]{10, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(10,new ItemStack(Material.IRON_SWORD,1));
+                    itemprices.put((new ItemStack(Material.IRON_SWORD,1)).toString(),new int[]{Integer.MAX_VALUE, 7,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(11,new ItemStack(Material.DIAMOND_SWORD,1));
+                    itemprices.put((new ItemStack(Material.DIAMOND_SWORD,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    //ARMOR
+                    ((Container) b).getInventory().setItem(12,new ItemStack(Material.CHAINMAIL_BOOTS,1));
+                    itemprices.put((new ItemStack(Material.CHAINMAIL_BOOTS,1)).toString(),new int[]{40, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(13,new ItemStack(Material.IRON_BOOTS,1));
+                    itemprices.put((new ItemStack(Material.IRON_BOOTS,1)).toString(),new int[]{Integer.MAX_VALUE, 12,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(14,new ItemStack(Material.DIAMOND_BOOTS,1));
+                    itemprices.put((new ItemStack(Material.DIAMOND_BOOTS,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,8});
+                    ((Container) b).getInventory().setItem(15,new ItemStack(Material.SHIELD,1));
+                    itemprices.put((new ItemStack(Material.SHIELD,1)).toString(),new int[]{Integer.MAX_VALUE, 6,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(16,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(17,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    //AXE
+                    ((Container) b).getInventory().setItem(18,new ItemStack(Material.WOODEN_AXE,1));
+                    itemprices.put((new ItemStack(Material.WOODEN_AXE,1)).toString(),new int[]{10, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(19,new ItemStack(Material.STONE_AXE,1));
+                    itemprices.put((new ItemStack(Material.STONE_AXE,1)).toString(),new int[]{20, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(20,new ItemStack(Material.IRON_AXE,1));
+                    itemprices.put((new ItemStack(Material.IRON_AXE,1)).toString(),new int[]{Integer.MAX_VALUE, 6,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(21,new ItemStack(Material.DIAMOND_AXE,1));
+                    itemprices.put((new ItemStack(Material.DIAMOND_AXE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,6});
+                    //PICKAXE
+                    ((Container) b).getInventory().setItem(22,new ItemStack(Material.WOODEN_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.WOODEN_PICKAXE,1)).toString(),new int[]{10, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(23,new ItemStack(Material.IRON_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.IRON_PICKAXE,1)).toString(),new int[]{20, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(24,new ItemStack(Material.GOLDEN_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.GOLDEN_PICKAXE,1)).toString(),new int[]{Integer.MAX_VALUE, 8,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(25,new ItemStack(Material.DIAMOND_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.DIAMOND_PICKAXE,1)).toString(),new int[]{Integer.MAX_VALUE, 12,Integer.MAX_VALUE});
+                    //SHEARS
+                    ((Container) b).getInventory().setItem(26,new ItemStack(Material.SHEARS,1));
+                    itemprices.put((new ItemStack(Material.SHEARS,1)).toString(),new int[]{20, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    //RANGED
+                    ((Container) b).getInventory().setItem(28,new ItemStack(Material.ARROW,8));
+                    itemprices.put((new ItemStack(Material.ARROW,8)).toString(),new int[]{Integer.MAX_VALUE, 2,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(29,new ItemStack(Material.CROSSBOW,1));
+                    itemprices.put((new ItemStack(Material.CROSSBOW,1)).toString(),new int[]{Integer.MAX_VALUE, 12,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(30,new ItemStack(Material.BOW,1));
+                    itemprices.put((new ItemStack(Material.BOW,1)).toString(),new int[]{Integer.MAX_VALUE, 24,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(31,new ItemStack(Material.BOW,1));
+                    itemprices.put((new ItemStack(Material.BOW,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,6});
+                    //POTIONS
+                    ItemStack speed = new ItemStack(Material.POTION);
+                    PotionMeta meta = (PotionMeta) speed.getItemMeta();
+                    meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 900, 1), true);
+                    speed.setItemMeta(meta);
+                    ItemStack jump = new ItemStack(Material.POTION);
+                    PotionMeta meta2 = (PotionMeta) jump.getItemMeta();
+                    meta2.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 900, 4), true);
+                    jump.setItemMeta(meta2);
+                    ItemStack invis = new ItemStack(Material.POTION);
+                    PotionMeta meta3 = (PotionMeta) invis.getItemMeta();
+                    meta3.addCustomEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 600, 0), true);
+                    invis.setItemMeta(meta3);
+                    ItemStack slowfall = new ItemStack(Material.POTION);
+                    PotionMeta meta4 = (PotionMeta) slowfall.getItemMeta();
+                    meta4.addCustomEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 900, 0), true);
+                    slowfall.setItemMeta(meta4);
+                    ((Container) b).getInventory().setItem(32,speed);
+                    itemprices.put((speed).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,1});
+                    ((Container) b).getInventory().setItem(33,jump);
+                    itemprices.put((jump).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,1});
+                    ((Container) b).getInventory().setItem(34,invis);
+                    itemprices.put((invis).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,2});
+                    ((Container) b).getInventory().setItem(35,slowfall);
+                    itemprices.put((slowfall).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,2});
+                    //SPECIAL
+                    ((Container) b).getInventory().setItem(36,new ItemStack(Material.GOLDEN_APPLE,1));
+                    itemprices.put((new ItemStack(Material.GOLDEN_APPLE,1)).toString(),new int[]{Integer.MAX_VALUE, 5,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(37,new ItemStack(Material.SNOWBALL,1));
+                    itemprices.put((new ItemStack(Material.SNOWBALL,1)).toString(),new int[]{40, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(38,new ItemStack(Material.GHAST_SPAWN_EGG,1));
+                    itemprices.put((new ItemStack(Material.GHAST_SPAWN_EGG,1)).toString(),new int[]{120, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(39,new ItemStack(Material.FIRE_CHARGE,1));
+                    itemprices.put((new ItemStack(Material.FIRE_CHARGE,1)).toString(),new int[]{40, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(40,new ItemStack(Material.TNT,1));
+                    itemprices.put((new ItemStack(Material.TNT,1)).toString(),new int[]{Integer.MAX_VALUE, 4,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(41,new ItemStack(Material.ENDER_PEARL,1));
+                    itemprices.put((new ItemStack(Material.ENDER_PEARL,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    ((Container) b).getInventory().setItem(42,new ItemStack(Material.WATER_BUCKET,1));
+                    itemprices.put((new ItemStack(Material.WATER_BUCKET,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,3});
+                    ((Container) b).getInventory().setItem(43,new ItemStack(Material.SPONGE,4));
+                    itemprices.put((new ItemStack(Material.SPONGE,1)).toString(),new int[]{Integer.MAX_VALUE, 3,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(44,new ItemStack(Material.MILK_BUCKET,1));
+                    itemprices.put((new ItemStack(Material.MILK_BUCKET,1)).toString(),new int[]{Integer.MAX_VALUE, 4,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(45,new ItemStack(Material.EGG,1));
+                    itemprices.put((new ItemStack(Material.EGG,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,2});
+                    ((Container) b).getInventory().setItem(46,new ItemStack(Material.TRIDENT,1));
+                    itemprices.put((new ItemStack(Material.TRIDENT,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,6});
+                    ((Container) b).getInventory().setItem(47,new ItemStack(Material.ELYTRA,1));
+                    itemprices.put((new ItemStack(Material.ELYTRA,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    ((Container) b).getInventory().setItem(48,new ItemStack(Material.FIREWORK_ROCKET,4));
+                    itemprices.put((new ItemStack(Material.FIREWORK_ROCKET,4)).toString(),new int[]{Integer.MAX_VALUE, 2,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(49,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(50,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(51,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(52,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(53,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void shop (InventoryClickEvent event){
+        if(event.getWhoClicked() instanceof Player){
+            Player p = (Player)event.getWhoClicked();
+            if(event.getClickedInventory().getType().equals(InventoryType.CHEST)&&event.getClick().isLeftClick()){
+                ItemStack tobuy = new ItemStack(event.getCurrentItem());
+                int slot = event.getSlot();
+                event.setCancelled(true);
+                int[] price = itemprices.get(tobuy.toString());
+                System.out.println(Arrays.toString(price));
+                ItemStack iron = new ItemStack(Material.IRON_INGOT,price[0]);
+                System.out.println(iron.toString());
+                ItemStack gold = new ItemStack(Material.GOLD_INGOT,price[1]);
+                ItemStack emerald = new ItemStack(Material.EMERALD,price[2]);
+                if(tobuy.getType().equals(Material.WOODEN_AXE)||tobuy.getType().equals(Material.STONE_AXE)||tobuy.getType().equals(Material.IRON_AXE)||tobuy.getType().equals(Material.DIAMOND_AXE)){
+                    hasaxe.put(p,true);
+                }
+                if(tobuy.getType().equals(Material.WOODEN_PICKAXE)||tobuy.getType().equals(Material.IRON_PICKAXE)||tobuy.getType().equals(Material.GOLDEN_PICKAXE)||tobuy.getType().equals(Material.DIAMOND_PICKAXE)){
+                    haspick.put(p,true);
+                }
+                if(tobuy.getType().equals(Material.STONE_AXE)||tobuy.getType().equals(Material.IRON_PICKAXE)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.DIG_SPEED, 1, true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.IRON_AXE)||tobuy.getType().equals(Material.GOLDEN_PICKAXE)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.DIG_SPEED, 2, true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.DIAMOND_AXE)||tobuy.getType().equals(Material.DIAMOND_PICKAXE)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.DIG_SPEED, 3, true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.CROSSBOW)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.QUICK_CHARGE, 5, true);
+                    meta.addEnchant(Enchantment.MULTISHOT,1, true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.BOW)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.ARROW_DAMAGE, 2, true);
+                    if(slot==31){
+                        meta.addEnchant(Enchantment.ARROW_KNOCKBACK,2,true);
+                    }
+
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.TRIDENT)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.RIPTIDE, 5, true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.ELYTRA)){
+                    tobuy.setDurability((short)429);
+                }else{
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.setUnbreakable(true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(p.getInventory().containsAtLeast(iron,price[0])){
+                    if (tobuy.getType().equals(Material.CHAINMAIL_BOOTS)) {
+                        ItemStack[] stack = { new ItemStack(Material.CHAINMAIL_BOOTS),
+                                new ItemStack(Material.CHAINMAIL_LEGGINGS),
+                                new ItemStack(Material.CHAINMAIL_CHESTPLATE),
+                                new ItemStack(Material.CHAINMAIL_HELMET), };
+                        if(!Arrays.equals(armor.get(p),stack)&&!((p.getInventory().getBoots().getType().equals(Material.DIAMOND_BOOTS))||(p.getInventory().getBoots().getType().equals(Material.IRON_BOOTS)))){
+                            armor.put(p,stack);
+                            PlayerInventory inv = p.getInventory();
+                            inv.setArmorContents(stack);
+                            p.getInventory().removeItem(iron);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this or something better.");
+                        }
+                    }else if(tobuy.getType().equals(Material.SHEARS)){
+                        if(!hasshield.get(p)){
+                            p.getInventory().addItem(new ItemStack(Material.SHEARS));
+                            hasshears.put(p,true);
+                            p.getInventory().removeItem(iron);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this");
+                        }
+
+                    }else{
+                        p.getInventory().removeItem(iron);
+                        p.getInventory().addItem(tobuy);
+                        p.updateInventory();
+                    }
+
+                }else if(event.getWhoClicked().getInventory().containsAtLeast(gold,price[1])){
+
+                    if (tobuy.getType().equals(Material.IRON_BOOTS)) {
+                        ItemStack[] stack = { new ItemStack(Material.IRON_BOOTS),
+                                new ItemStack(Material.IRON_LEGGINGS),
+                                new ItemStack(Material.IRON_CHESTPLATE),
+                                new ItemStack(Material.IRON_HELMET), };
+                        if(!Arrays.equals(armor.get(p),stack)&&!(p.getInventory().getBoots().getType().equals(Material.DIAMOND_BOOTS))){
+                            armor.put(p,stack);
+                            PlayerInventory inv = p.getInventory();
+                            inv.setArmorContents(stack);
+                            p.getInventory().removeItem(gold);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this or something better.");
+                        }
+                    }else if(tobuy.getType().equals(Material.SHIELD)){
+                        if(!hasshield.get(p)){
+                            p.getInventory().setItemInOffHand(new ItemStack(Material.SHIELD));
+                            hasshield.put(p,true);
+                            p.getInventory().removeItem(gold);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this");
+                        }
+
+                    }
+                    else{
+                        p.getInventory().removeItem(gold);
+                        p.getInventory().addItem(tobuy);
+                        p.updateInventory();
+                    }
+                }else if(event.getWhoClicked().getInventory().containsAtLeast(emerald,price[2])){
+                    if (tobuy.getType().equals(Material.DIAMOND_BOOTS)) {
+                        ItemStack[] stack = { new ItemStack(Material.DIAMOND_BOOTS),
+                                new ItemStack(Material.DIAMOND_LEGGINGS),
+                                new ItemStack(Material.DIAMOND_CHESTPLATE),
+                                new ItemStack(Material.DIAMOND_HELMET), };
+
+                        if(!Arrays.equals(armor.get(p),stack)){
+                            armor.put(p,stack);
+                            PlayerInventory inv = p.getInventory();
+                            inv.setArmorContents(stack);
+                            p.getInventory().removeItem(emerald);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this.");
+                        }
+                    }else{
+                        p.getInventory().removeItem(emerald);
+                        p.getInventory().addItem(tobuy);
+                        p.updateInventory();
+                    }
+
+                }else{
+                    event.getWhoClicked().sendMessage(ChatColor.RED+"You cannot afford this item!");
+                }
+
+
+            }
+            else if(event.getClickedInventory().getType().equals(InventoryType.CHEST)){
+                event.setCancelled(true);
+            }
+        }
+
+    }
+
+    @EventHandler
+    public void onThrow(ProjectileLaunchEvent event) {
+        if(event.getEntityType().equals(EntityType.EGG)){
+            getServer().broadcastMessage(event.getEntity().getVelocity().toString());
+            //3D PROJECTILE MOTION CALCULATIONS GO HERE
+        }
+
+
+
+        }
+
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event){
+        ItemStack[] parm = armor.get(event.getPlayer());
+        event.getPlayer().getInventory().setBoots(parm[0]);
+        event.getPlayer().getInventory().setLeggings(parm[1]);
+        event.getPlayer().getInventory().setChestplate(parm[2]);
+        event.getPlayer().getInventory().setHelmet(parm[3]);
+        event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_SWORD,1));
+        if(hasaxe.get(event.getPlayer())){
+            event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_AXE,1));
+        }
+        if(haspick.get(event.getPlayer())){
+            event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_PICKAXE,1));
+        }
+        if(hasshears.get(event.getPlayer())){
+            event.getPlayer().getInventory().addItem(new ItemStack(Material.SHEARS,1));
+        }
+        if(hasshield.get(event.getPlayer())){
+            event.getPlayer().getInventory().setItemInOffHand(new ItemStack(Material.SHIELD,1));
+        }
+
+    }
+
+    @Override
+    public void onDisable() {
+        System.out.println("bye");
+    }
+}
