@@ -1,0 +1,2151 @@
+package achy.me.bedwars;
+
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
+import org.bukkit.block.*;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.*;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.BlockDataMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.metadata.MetadataValue;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.*;
+import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.*;
+import org.bukkit.util.BoundingBox;
+import org.bukkit.util.Vector;
+
+import javax.swing.plaf.basic.BasicScrollPaneUI;
+import javax.xml.crypto.dom.DOMCryptoContext;
+import java.util.*;
+
+import static org.bukkit.Bukkit.*;
+
+public final class BEDWARS extends JavaPlugin implements Listener {
+    HashMap<String,int[]> itemprices= new HashMap<>();
+    HashMap<Player, Boolean> hasaxe = new HashMap<>();
+    HashMap<Player, Boolean> haspick = new HashMap<>();
+    HashMap<Player, Boolean> hasshield = new HashMap<>();
+    HashMap<Player, Boolean> hasshears = new HashMap<>();
+    HashMap<Player, ItemStack[]> armor = new HashMap<>();
+    HashMap<Player, Team> team = new HashMap<>();
+    HashMap<Color,Player> assign = new HashMap<>();
+    HashMap<Player,Color> assign2 = new HashMap<>();
+    HashMap<Player, ChatColor> chatcolors = new HashMap<>();
+    HashMap<Player, Boolean> hasBed = new HashMap<>();
+    ChatColor[] chats ={ChatColor.RED,ChatColor.BLUE,ChatColor.GREEN,ChatColor.YELLOW, ChatColor.WHITE,ChatColor.AQUA, ChatColor.LIGHT_PURPLE,ChatColor.GRAY};
+    Color[] colors = {Color.RED,Color.BLUE,Color.GREEN,Color.YELLOW, Color.WHITE,Color.AQUA, Color.FUCHSIA,Color.GRAY};
+    Location[] beds = {new Location(getServer().getWorld("world"), -31,65, -69),new Location(getServer().getWorld("world"), 32,65, -69),new Location(getServer().getWorld("world"), 70,65, -31),new Location(getServer().getWorld("world"), 70,65, -31),new Location(getServer().getWorld("world"), 70,65, 32),new Location(getServer().getWorld("world"), 32,65, 70),new Location(getServer().getWorld("world"), -31,65, 70),new Location(getServer().getWorld("world"), -69,65, 32),new Location(getServer().getWorld("world"), -69,65, -31)};
+    Location[] iron = {new Location(getServer().getWorld("world"),-31.5,65.5,-85.5),new Location(getServer().getWorld("world"),32.5,65.5,-85.5), new Location(getServer().getWorld("world"),86.5,65.5,-31.5),new Location(getServer().getWorld("world"),86.5,65.5,32.5),new Location(getServer().getWorld("world"),32.5,65.5,86.5),new Location(getServer().getWorld("world"),-31.5,65.5,86.5),new Location(getServer().getWorld("world"),-85.5,65.5,32.5),new Location(getServer().getWorld("world"),-85.5,65.5,-31.5)};
+    Location[] gold = {new Location(getServer().getWorld("world"),-31.5,65.5,-86.5),new Location(getServer().getWorld("world"),32.5,65.5,-86.5), new Location(getServer().getWorld("world"),87.5,65.5,-31.5),new Location(getServer().getWorld("world"),86.5,65.5,32.5),new Location(getServer().getWorld("world"),32.5,65.5,87.5),new Location(getServer().getWorld("world"),-31.5,65.5,87.5),new Location(getServer().getWorld("world"),-86.5,65.5,32.5),new Location(getServer().getWorld("world"),-86.5,65.5,-31.5)};
+    Location[] diamond = {new Location(getServer().getWorld("world"),-31.5,66.5,-31.5),new Location(getServer().getWorld("world"),32.5,66.5,-31.5),new Location(getServer().getWorld("world"),32.5,66.5,32.5),new Location(getServer().getWorld("world"),-31.5,66.5,32.5)};
+    Location[] emerald = {new Location(getServer().getWorld("world"),-11.5,67.5,15.5), new Location(getServer().getWorld("world"),-2.5,57.5,8.5),new Location(getServer().getWorld("world"),12.5,67.5,-14.5),new Location(getServer().getWorld("world"),3.5,57.5,-7.5)};
+    HashMap<Player,Location> generators = new HashMap<>();
+    ArmorStand[] diamondStands = new ArmorStand[4];
+    ArmorStand[] emeraldStands = new ArmorStand[4];
+    HashMap<Player, Material> wool = new HashMap<>();
+    long diamondDelay = 30;
+    long emeraldDelay = 60;
+    long diamondCounter =0;
+    long emeraldCounter =0;
+    Material[] wools = {Material.RED_WOOL, Material.BLUE_WOOL, Material.GREEN_WOOL, Material.YELLOW_WOOL, Material.WHITE_WOOL, Material.CYAN_WOOL, Material.PINK_WOOL, Material.GRAY_WOOL};
+    String[] entries = {ChatColor.RED + "Red Bed: ✔ Players: ",ChatColor.BLUE + "Blue Bed: ✔ Players: ",ChatColor.GREEN + "Green Bed: ✔ Players: ",ChatColor.YELLOW + "Yellow Bed: ✔ Players: ",ChatColor.AQUA + "Aqua Bed: ✔ Players: ",ChatColor.AQUA + "Aqua Bed: ✔ Players: ",ChatColor.LIGHT_PURPLE + "Pink Bed: ✔ Players: ",ChatColor.WHITE + "White Bed: ✔ Players: ",ChatColor.DARK_GRAY + "Gray Bed: ✔ Players: "};
+    String[] breakentries = {ChatColor.RED + "Red Bed: ❌ Players: ",ChatColor.BLUE + "Blue Bed: ❌ Players: ",ChatColor.GREEN + "Green Bed: ❌ Players: ",ChatColor.YELLOW + "Yellow Bed: ❌ Players: ",ChatColor.AQUA + "Aqua Bed: ❌ Players: ",ChatColor.AQUA + "Aqua Bed: ❌ Players: ",ChatColor.LIGHT_PURPLE + "Pink Bed: ❌ Players: ",ChatColor.WHITE + "White Bed: ❌ Players: ",ChatColor.DARK_GRAY + "Gray Bed: ❌ Players: "};
+    HashMap<Player, String> entryMap = new HashMap<>();
+    HashMap<Player,String > brokenEntryMap = new HashMap<>();
+    ScoreboardManager manager = Bukkit.getScoreboardManager();
+    Scoreboard board = manager.getNewScoreboard();
+    HashMap<Player, Boolean> sharp = new HashMap<>();
+    HashMap<Player, Boolean> heal = new HashMap<>();
+    HashMap<Player, Boolean> miner = new HashMap<>();
+    HashMap<Player, Boolean> slow = new HashMap<>();
+    HashMap<Player, Boolean> counttrap = new HashMap<>();
+    HashMap<Player,Integer> haste = new HashMap<>();
+    HashMap<Player, Integer> protection = new HashMap<>();
+    HashMap<Location, Player> traps = new HashMap<>();
+    @Override
+    public void onEnable() {
+        this.getCommand("start").setExecutor(new start());
+        getServer().getPluginManager().registerEvents(this,this);
+
+
+        int e=0;
+        colorMap.put("RED",colors[0]);
+        colorMap.put("BLUE",colors[1]);
+        colorMap.put("GREEN",colors[2]);
+        colorMap.put("YELLOW",colors[3]);
+        colorMap.put("WHITE",colors[4]);
+        colorMap.put("AQUA",colors[5]);
+        colorMap.put("FUCHSIA",colors[6]);
+        colorMap.put("GRAY",colors[7]);
+
+        Team[] teams ={board.registerNewTeam("Red"),board.registerNewTeam("Blue"),board.registerNewTeam("Green"),board.registerNewTeam("Yellow"),board.registerNewTeam("White"),board.registerNewTeam("Aqua"),board.registerNewTeam("Pink"),board.registerNewTeam("Grey")};
+        Objective objective = board.registerNewObjective("test", "dummy");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        objective.setDisplayName("Welcome To Bedwars!");
+        Score score = objective.getScore(ChatColor.RED + "Red Bed: ✔ Players: ");
+        Score score2 = objective.getScore(ChatColor.BLUE + "Blue Bed: ✔ Players: ");
+        Score score3 = objective.getScore(ChatColor.GREEN + "Green Bed: ✔ Players: ");
+        Score score4 = objective.getScore(ChatColor.YELLOW + "Yellow Bed: ✔ Players: ");
+        Score score5 = objective.getScore(ChatColor.AQUA + "Aqua Bed: ✔ Players: ");
+        Score score6 = objective.getScore(ChatColor.LIGHT_PURPLE + "Pink Bed: ✔ Players: ");
+        Score score7 = objective.getScore(ChatColor.WHITE + "White Bed: ✔ Players: ");
+        Score score8 = objective.getScore(ChatColor.DARK_GRAY + "Gray Bed: ✔ Players: ");
+        score.setScore(1);
+        score2.setScore(1);
+        score3.setScore(1);
+        score4.setScore(1);
+        score5.setScore(1);
+        score6.setScore(1);
+        score7.setScore(1);
+        score8.setScore(1);
+
+        int counte=0;
+        for(Location l: diamond){
+            ArmorStand stand =(ArmorStand)getServer().getWorld("world").spawnEntity(l.add(0,2,0), EntityType.ARMOR_STAND);
+            stand.setGravity(false);
+            stand.setVisible(false);
+            stand.setCollidable(false);
+            stand.setInvulnerable(true);
+            stand.setSilent(true);
+            stand.setCustomName("30 Seconds Until Spawn");
+            stand.setCustomNameVisible(true);
+            diamondStands[counte]=stand;
+            counte++;
+
+        }
+        counte=0;
+        for(Location l: emerald){
+            ArmorStand stand =(ArmorStand)getServer().getWorld("world").spawnEntity(l.add(0,2,0), EntityType.ARMOR_STAND);
+            stand.setGravity(false);
+            stand.setVisible(false);
+            stand.setCollidable(false);
+            stand.setInvulnerable(true);
+            stand.setSilent(true);
+            stand.setCustomName("60 Seconds Until Spawn");
+            stand.setCustomNameVisible(true);
+            emeraldStands[counte]=stand;
+            counte++;
+        }
+        int counter=0;
+        for(Player p: getServer().getOnlinePlayers()){
+            p.setSaturation(5);
+            entryMap.put(p, entries[counter]);
+            brokenEntryMap.put(p,breakentries[counter]);
+            p.setScoreboard(board);
+            hasBed.put(p,true);
+            ItemStack[] stack = { new ItemStack(Material.LEATHER_BOOTS),
+                    new ItemStack(Material.LEATHER_LEGGINGS),
+                    new ItemStack(Material.LEATHER_CHESTPLATE),
+                    new ItemStack(Material.LEATHER_HELMET), };
+            hasaxe.put(p,false);
+            haspick.put(p,false);
+            hasshield.put(p,false);
+            hasshears.put(p,false);
+            armor.put(p,stack);
+            ItemStack[] parm = armor.get(p);
+            p.getInventory().setBoots(parm[0]);
+            p.getInventory().setLeggings(parm[1]);
+            p.getInventory().setChestplate(parm[2]);
+            p.getInventory().setHelmet(parm[3]);
+            p.getInventory().addItem(new ItemStack(Material.WOODEN_SWORD,1));
+            teams[counter].addPlayer(p);
+            team.put(p,teams[counter]);
+            assign2.put(p,colors[counter]);
+            assign.put(colors[counter],p);
+            chatcolors.put(p,chats[counter]);
+            wool.put(p,wools[counter]);
+            generators.put(p, iron[counter]);
+            traps.put(iron[counter],p);
+            protection.put(p,0);
+            sharp.put(p,false);
+            counttrap.put(p,false);
+            heal.put(p,false);
+            miner.put(p,false);
+            slow.put(p,false);
+            haste.put(p,0);
+            counter++;
+
+
+        }
+
+
+
+        for(Chunk c : getServer().getWorld("world").getLoadedChunks()){
+            for(BlockState b : c.getTileEntities()){
+                if(b instanceof Container&&((Container)b).getType().equals(Material.BARREL)) {
+                    ((Container) b).getInventory().setItem(0,new ItemStack(Material.WOODEN_SWORD,1));
+                    ((Container) b).getInventory().setItem(1,new ItemStack(Material.IRON_CHESTPLATE,1));
+                    ((Container) b).getInventory().setItem(2,new ItemStack(Material.GOLDEN_PICKAXE,1));
+                    ((Container) b).getInventory().setItem(3,new ItemStack(Material.EMERALD,1));
+                    ((Container) b).getInventory().setItem(4,new ItemStack(Material.COAL,1));
+                    ((Container) b).getInventory().setItem(5,new ItemStack(Material.FEATHER,1));
+                    ((Container) b).getInventory().setItem(6,new ItemStack(Material.PRISMARINE,1));
+                    ((Container) b).getInventory().setItem(7,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(8,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(9,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(10,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(11,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(12,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(13,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(14,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(15,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(16,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(17,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(18,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(19,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(20,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(21, new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(22,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(23,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(24,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(25,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    ((Container) b).getInventory().setItem(26,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+
+                }
+
+                if(b instanceof Container&&((Container)b).getType().equals(Material.CHEST)){
+                    //BLOCKS
+                    ((Container) b).getInventory().setItem(0,new ItemStack(Material.WHITE_WOOL,16));
+                    itemprices.put((new ItemStack(Material.WHITE_WOOL,16)).toString(),new int[]{4, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(1,new ItemStack(Material.CLAY,16));
+                    itemprices.put((new ItemStack(Material.CLAY,16)).toString(),new int[]{12, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(2,new ItemStack(Material.OAK_PLANKS,16));
+                    itemprices.put((new ItemStack(Material.OAK_PLANKS,16)).toString(),new int[]{Integer.MAX_VALUE, 4,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(3,new ItemStack(Material.END_STONE,12));
+                    itemprices.put((new ItemStack(Material.END_STONE,12)).toString(),new int[]{24, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(4,new ItemStack(Material.NETHERITE_BLOCK,4));
+                    itemprices.put((new ItemStack(Material.NETHERITE_BLOCK,4)).toString(),new int[]{12, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(5,new ItemStack(Material.LADDER,16));
+                    itemprices.put((new ItemStack(Material.LADDER,16)).toString(),new int[]{4, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(6,new ItemStack(Material.OBSIDIAN,4));
+                    itemprices.put((new ItemStack(Material.OBSIDIAN,4)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    ((Container) b).getInventory().setItem(7,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(8,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    //SWORDS
+                    ((Container) b).getInventory().setItem(9,new ItemStack(Material.STONE_SWORD,1));
+                    itemprices.put((new ItemStack(Material.STONE_SWORD,1)).toString(),new int[]{10, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(10,new ItemStack(Material.IRON_SWORD,1));
+                    itemprices.put((new ItemStack(Material.IRON_SWORD,1)).toString(),new int[]{Integer.MAX_VALUE, 7,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(11,new ItemStack(Material.DIAMOND_SWORD,1));
+                    itemprices.put((new ItemStack(Material.DIAMOND_SWORD,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    //ARMOR
+                    ((Container) b).getInventory().setItem(12,new ItemStack(Material.CHAINMAIL_BOOTS,1));
+                    itemprices.put((new ItemStack(Material.CHAINMAIL_BOOTS,1)).toString(),new int[]{40, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(13,new ItemStack(Material.IRON_BOOTS,1));
+                    itemprices.put((new ItemStack(Material.IRON_BOOTS,1)).toString(),new int[]{Integer.MAX_VALUE, 12,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(14,new ItemStack(Material.DIAMOND_BOOTS,1));
+                    itemprices.put((new ItemStack(Material.DIAMOND_BOOTS,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,8});
+                    ((Container) b).getInventory().setItem(15,new ItemStack(Material.SHIELD,1));
+                    itemprices.put((new ItemStack(Material.SHIELD,1)).toString(),new int[]{Integer.MAX_VALUE, 6,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(16,new ItemStack(Material. FISHING_ROD,1));
+                    itemprices.put((new ItemStack(Material.FISHING_ROD,1)).toString(),new int[]{Integer.MAX_VALUE, 5,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(17,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    //AXE
+                    ((Container) b).getInventory().setItem(18,new ItemStack(Material.WOODEN_AXE,1));
+                    itemprices.put((new ItemStack(Material.WOODEN_AXE,1)).toString(),new int[]{10, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(19,new ItemStack(Material.STONE_AXE,1));
+                    itemprices.put((new ItemStack(Material.STONE_AXE,1)).toString(),new int[]{20, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(20,new ItemStack(Material.IRON_AXE,1));
+                    itemprices.put((new ItemStack(Material.IRON_AXE,1)).toString(),new int[]{Integer.MAX_VALUE, 6,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(21,new ItemStack(Material.NETHERITE_AXE,1));
+                    itemprices.put((new ItemStack(Material.NETHERITE_AXE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,6});
+                    //PICKAXE
+                    ((Container) b).getInventory().setItem(22,new ItemStack(Material.WOODEN_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.WOODEN_PICKAXE,1)).toString(),new int[]{10, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(23,new ItemStack(Material.IRON_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.IRON_PICKAXE,1)).toString(),new int[]{20, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(24,new ItemStack(Material.GOLDEN_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.GOLDEN_PICKAXE,1)).toString(),new int[]{Integer.MAX_VALUE, 8,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(25,new ItemStack(Material.DIAMOND_PICKAXE,1));
+                    itemprices.put((new ItemStack(Material.DIAMOND_PICKAXE,1)).toString(),new int[]{Integer.MAX_VALUE, 12,Integer.MAX_VALUE});
+                    //SHEARS
+                    ((Container) b).getInventory().setItem(26,new ItemStack(Material.SHEARS,1));
+                    itemprices.put((new ItemStack(Material.SHEARS,1)).toString(),new int[]{20, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    //RANGED
+                    ((Container) b).getInventory().setItem(28,new ItemStack(Material.ARROW,8));
+                    itemprices.put((new ItemStack(Material.ARROW,8)).toString(),new int[]{Integer.MAX_VALUE, 2,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(29,new ItemStack(Material.CROSSBOW,1));
+                    itemprices.put((new ItemStack(Material.CROSSBOW,1)).toString(),new int[]{Integer.MAX_VALUE, 12,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(30,new ItemStack(Material.BOW,1));
+                    itemprices.put((new ItemStack(Material.BOW,1)).toString(),new int[]{Integer.MAX_VALUE, 24,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(31,new ItemStack(Material.BOW,1));
+                    itemprices.put((new ItemStack(Material.BOW,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,6});
+                    //POTIONS
+                    ItemStack speed = new ItemStack(Material.POTION);
+                    PotionMeta meta = (PotionMeta) speed.getItemMeta();
+                    meta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 900, 1), true);
+                    meta.setColor(Color.ORANGE);
+                    meta.setDisplayName("Speed");
+                    speed.setItemMeta(meta);
+                    ItemStack jump = new ItemStack(Material.POTION);
+                    PotionMeta meta2 = (PotionMeta) jump.getItemMeta();
+                    meta2.addCustomEffect(new PotionEffect(PotionEffectType.JUMP, 900, 4), true);
+                    meta2.setColor(Color.LIME);
+                    meta2.setDisplayName("Jump Boost");
+                    jump.setItemMeta(meta2);
+                    ItemStack invis = new ItemStack(Material.POTION);
+                    PotionMeta meta3 = (PotionMeta) invis.getItemMeta();
+                    meta3.addCustomEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 600, 0), true);
+                    meta3.setColor(Color.GRAY);
+                    meta3.setDisplayName("Invisibility");
+                    invis.setItemMeta(meta3);
+                    ItemStack slowfall = new ItemStack(Material.POTION);
+                    PotionMeta meta4 = (PotionMeta) slowfall.getItemMeta();
+                    meta4.addCustomEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 900, 0), true);
+                    meta4.setColor(Color.WHITE);
+                    meta4.setDisplayName("Slow Fall");
+                    slowfall.setItemMeta(meta4);
+                    ((Container) b).getInventory().setItem(32,speed);
+                    itemprices.put((speed).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,1});
+                    ((Container) b).getInventory().setItem(33,jump);
+                    itemprices.put((jump).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,1});
+                    ((Container) b).getInventory().setItem(34,invis);
+                    itemprices.put((invis).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,2});
+                    ((Container) b).getInventory().setItem(35,slowfall);
+                    itemprices.put((slowfall).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,2});
+                    //SPECIAL
+                    ((Container) b).getInventory().setItem(36,new ItemStack(Material.GOLDEN_APPLE,1));
+                    itemprices.put((new ItemStack(Material.GOLDEN_APPLE,1)).toString(),new int[]{Integer.MAX_VALUE, 3,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(37,new ItemStack(Material.SNOWBALL,1));
+                    itemprices.put((new ItemStack(Material.SNOWBALL,1)).toString(),new int[]{40, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(38,new ItemStack(Material.GHAST_SPAWN_EGG,1));
+                    itemprices.put((new ItemStack(Material.GHAST_SPAWN_EGG,1)).toString(),new int[]{120, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(39,new ItemStack(Material.FIRE_CHARGE,1));
+                    itemprices.put((new ItemStack(Material.FIRE_CHARGE,1)).toString(),new int[]{40, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(40,new ItemStack(Material.TNT,1));
+                    itemprices.put((new ItemStack(Material.TNT,1)).toString(),new int[]{Integer.MAX_VALUE, 4,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(41,new ItemStack(Material.ENDER_PEARL,1));
+                    itemprices.put((new ItemStack(Material.ENDER_PEARL,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    ((Container) b).getInventory().setItem(42,new ItemStack(Material.WATER_BUCKET,1));
+                    itemprices.put((new ItemStack(Material.WATER_BUCKET,1)).toString(),new int[]{Integer.MAX_VALUE, 3,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(43,new ItemStack(Material.SPONGE,4));
+                    itemprices.put((new ItemStack(Material.SPONGE,4)).toString(),new int[]{Integer.MAX_VALUE, 3,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(44,new ItemStack(Material.MILK_BUCKET,1));
+                    itemprices.put((new ItemStack(Material.MILK_BUCKET,1)).toString(),new int[]{Integer.MAX_VALUE, 4,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(45,new ItemStack(Material.EGG,1));
+                    itemprices.put((new ItemStack(Material.EGG,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,2});
+                    ((Container) b).getInventory().setItem(46,new ItemStack(Material.TRIDENT,1));
+                    itemprices.put((new ItemStack(Material.TRIDENT,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,6});
+                    ((Container) b).getInventory().setItem(47,new ItemStack(Material.ELYTRA,1));
+                    itemprices.put((new ItemStack(Material.ELYTRA,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,4});
+                    ((Container) b).getInventory().setItem(48,new ItemStack(Material.FIREWORK_ROCKET,4));
+                    itemprices.put((new ItemStack(Material.FIREWORK_ROCKET,4)).toString(),new int[]{Integer.MAX_VALUE, 2,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(49,new ItemStack(Material.COMPASS,1));
+                    itemprices.put((new ItemStack(Material.COMPASS,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,2});
+                    ((Container) b).getInventory().setItem(50,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(51,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(52,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                    ((Container) b).getInventory().setItem(53,new ItemStack(Material.LIGHT_GRAY_STAINED_GLASS_PANE,1));
+                    itemprices.put((new ItemStack(Material.GRAY_STAINED_GLASS_PANE,1)).toString(),new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE,Integer.MAX_VALUE});
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void food(FoodLevelChangeEvent event){
+        event.setCancelled(true);
+        Player p = (Player)event.getEntity();
+        p.setSaturation(10);
+    }
+
+    public static int getNearbyEntities(Location l, Material m) {
+        int ItemCOunt =0;
+        for (Entity e: l.getChunk().getEntities()) {
+
+            if ( e.getLocation().distance(l)<10.0&&e.getType().equals(EntityType.DROPPED_ITEM)){
+                if(e instanceof Item){
+                    Item meow = (Item) e;
+                    if(meow.getItemStack().getType().equals(m)) {
+                        ItemCOunt += meow.getItemStack().getAmount();
+                    }
+                }
+            }
+        }
+        return ItemCOunt;
+    }
+    int time1 = 360;
+    int time2 = 360;
+    int time3 = 360;
+    int time4 = 360;
+    int time5 = 360;
+
+    public String timeconvert(int time){
+        String s = time/60+":";
+        String meow = time%60+"";
+        if(meow.length()==1){
+            meow = "0"+meow;
+        }
+        return s+meow;
+    }
+    @EventHandler
+    public void bedbreak(ItemSpawnEvent event){
+        if(event.getEntity().getItemStack().getType().toString().contains("BED")){
+            event.setCancelled(true);
+        }
+    }
+    @EventHandler
+    public void compass(PlayerMoveEvent event){
+
+        for(Player p: getServer().getOnlinePlayers()){
+            Location lMin = new Location(getServer().getWorld("world"), 0,1000,0);
+            Player target =p;
+            for(Player wow:getServer().getOnlinePlayers()){
+                if(!p.equals(wow)&&p.getLocation().distance(wow.getLocation())<p.getLocation().distance(lMin)&&p.getGameMode().equals(GameMode.SURVIVAL)&&wow.getGameMode().equals(GameMode.SURVIVAL)){
+                    lMin=wow.getLocation();
+                    target=wow;
+                }
+            }
+            p.setCompassTarget(lMin);
+
+            if(p.getInventory().contains(Material.COMPASS)){
+                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(chatcolors.get(target)+"Tracking Player: "+target.getDisplayName()+": "+(int)p.getLocation().distance(lMin)+" blocks away"));
+            }
+            if(heal.get(p)){
+                if(p.getLocation().distance(generators.get(p))<25){
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100,1 ));
+                }
+            }
+            if(haste.get(p)>0){
+                p.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 20000,haste.get(p)-1 ));
+            }
+            for(Location l: iron){
+                if(p.getLocation().distance(l)<25){
+                    Player trigger = traps.get(l);
+                    if(!trigger.equals(p)||p.getGameMode().equals(GameMode.SURVIVAL)){
+
+                        if(miner.get(trigger)){
+                            p.sendTitle(ChatColor.RED+"Trap Triggered!", chatcolors.get(p)+"Oops!",5,20,5);
+                            trigger.sendTitle(ChatColor.RED+"Trap Triggered!", chatcolors.get(p)+"Someone is at your bed!",5,20,5);
+                            miner.put(trigger, false);
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_DIGGING, 200,0 ));
+                        }
+                        if(slow.get(trigger)){
+                            p.sendTitle(ChatColor.RED+"Trap Triggered!", chatcolors.get(p)+"Oops!",5,20,5);
+                            trigger.sendTitle(ChatColor.RED+"Trap Triggered!", chatcolors.get(p)+"Someone is at your bed!",5,20,5);
+                            slow.put(trigger, false);
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200,2 ));
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 200,2 ));
+                        }
+                        if(counttrap.get(trigger)){
+                            p.sendTitle(ChatColor.RED+"Trap Triggered!", chatcolors.get(p)+"Oops!",5,20,5);
+                            trigger.sendTitle(ChatColor.RED+"Trap Triggered!", chatcolors.get(p)+"Someone is at your bed!",5,20,5);
+                            counttrap.put(trigger,false);
+                            p.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 200,1 ));
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    @EventHandler
+    public void gamestart (FireworkExplodeEvent event){
+
+        if(event.getEntity().getFireworkMeta().hasEffects()) {
+
+            BossBar bossBar1 = Bukkit.createBossBar("Time Left Until Diamond 2: 6:00", BarColor.BLUE, BarStyle.SEGMENTED_20);
+            BossBar bossBar2 = Bukkit.createBossBar("Time Left Until Emerald 2: 6:00", BarColor.GREEN, BarStyle.SEGMENTED_20);
+            BossBar bossBar3 = Bukkit.createBossBar("Time Left Until Diamond 3: 6:00", BarColor.BLUE, BarStyle.SEGMENTED_20);
+            BossBar bossBar4 = Bukkit.createBossBar("Time Left Until Emerald 3: 6:00", BarColor.GREEN, BarStyle.SEGMENTED_20);
+            BossBar bossBar5 = Bukkit.createBossBar("Time Left Until Bed Break: 6:00", BarColor.RED, BarStyle.SEGMENTED_20);
+            bossBar1.setProgress(1);
+            bossBar2.setProgress(1);
+            bossBar3.setProgress(1);
+            bossBar4.setProgress(1);
+            bossBar5.setProgress(1);
+            for(Player p : getServer().getOnlinePlayers()){
+                p.teleport(generators.get(p));
+                bossBar1.addPlayer(p);
+            }
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar1.setProgress((((double)time1) / 360.0));
+                    bossBar1.setTitle("Time Left Until Diamond 2: "+timeconvert(time1));
+                    time1= time1-1;
+                }
+            }, 0L, 20L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar1.removeAll();
+                    diamondDelay=25;
+                    diamondCounter=0;
+                    for(Player p: getServer().getOnlinePlayers()){
+                        bossBar2.addPlayer(p);
+                    }
+
+                }
+            }, 7200L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar2.setProgress((((double)time2) / 360.0));
+                    bossBar2.setTitle("Time Left Until Emerald 2: "+timeconvert(time2));
+                    time2= time2-1;
+                }
+            }, 7200L, 20L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar2.removeAll();
+                    emeraldCounter=0;
+                    emeraldDelay=50;
+                    for(Player p: getServer().getOnlinePlayers()){
+                        bossBar3.addPlayer(p);
+                    }
+                }
+            }, 14400L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar3.setProgress((((double)time3) / 360.0));
+                    bossBar3.setTitle("Time Left Until Diamond 3: "+timeconvert(time3));
+                    time3= time3-1;
+                }
+            }, 14400L, 20L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar3.removeAll();
+                    diamondCounter=0;
+                    diamondDelay=20;
+                    for(Player p: getServer().getOnlinePlayers()){
+                        bossBar4.addPlayer(p);
+                    }
+                }
+            }, 21600L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar4.setProgress((((double)time4) / 360.0));
+                    bossBar4.setTitle("Time Left Until Emerald 3: "+timeconvert(time4));
+                    time4= time4-1;
+                }
+            }, 21600L, 20L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar4.removeAll();
+                    emeraldCounter=0;
+                    emeraldDelay=40;
+                    for(Player p: getServer().getOnlinePlayers()){
+                        bossBar5.addPlayer(p);
+                    }
+                }
+            }, 28800L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar5.setProgress((((double)time5) / 360.0));
+                    bossBar5.setTitle("Time Left Until Emerald 3: "+timeconvert(time5));
+                    time5= time5-1;
+                }
+            }, 28800L, 20L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    bossBar5.removeAll();
+                    for(Player p: getServer().getOnlinePlayers()){
+                        p.sendTitle("BED DESTROYED"+ChatColor.RED,"You no longer will respawn!",10,20,10);
+                        hasBed.put(p,false);
+                    }
+                    for(Location b: beds){
+                        b.getBlock().breakNaturally();
+                    }
+
+                }
+            }, 36000L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    for (Location l : iron) {
+                        if (getNearbyEntities(l,Material.IRON_INGOT) < 48) {
+                            getServer().getWorld("world").dropItem(l, new ItemStack(Material.IRON_INGOT, 1));
+                        }
+                    }
+                }
+            }, 0L, 16L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    for (Location l : gold) {
+                        if (getNearbyEntities(l,Material.GOLD_INGOT) < 16) {
+                            getServer().getWorld("world").dropItem(l, new ItemStack(Material.GOLD_INGOT, 1));
+                        }
+                    }
+                }
+            }, 0L, 96L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    if ((diamondCounter % diamondDelay + diamondDelay) % diamondDelay == 0) {
+                        for (Location l : diamond) {
+                            if (getNearbyEntities(l,Material.DIAMOND) < 4) {
+                                getServer().getWorld("world").dropItem(l, new ItemStack(Material.DIAMOND, 1));
+                            }
+                        }
+                    }
+                    for (ArmorStand stand : diamondStands) {
+                        stand.setCustomName((diamondCounter % diamondDelay + diamondDelay) % diamondDelay + " Seconds Until Spawn");
+                    }
+                    diamondCounter--;
+                }
+            }, 0L, 20L);
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    if ((emeraldCounter % emeraldDelay + emeraldDelay) % emeraldDelay == 0) {
+                        for (Location l : emerald) {
+                            if (getNearbyEntities(l,Material.EMERALD) < 2) {
+                                getServer().getWorld("world").dropItem(l, new ItemStack(Material.EMERALD, 1));
+                            }
+                        }
+                    }
+                    for (ArmorStand stand : emeraldStands) {
+                        stand.setCustomName((emeraldCounter % emeraldDelay + emeraldDelay) % emeraldDelay + " Seconds Until Spawn");
+                    }
+                    emeraldCounter--;
+                }
+            }, 0L, 20L);
+
+
+        }
+    }
+    @EventHandler
+    public void durabilityEvent(PlayerItemDamageEvent event){
+        if(!event.getItem().getType().equals(Material.ELYTRA)){
+            event.setCancelled(true);
+        }else{
+            if(event.getItem().getDurability()==430){
+                    event.getPlayer().getInventory().setChestplate(armor.get(event.getPlayer())[2]);
+                    event.getPlayer().updateInventory();
+
+            }
+        }
+    }
+    @EventHandler
+    public void shop (InventoryClickEvent event){
+        if(event.getWhoClicked() instanceof Player){
+            Player p = (Player)event.getWhoClicked();
+            if(event.getClickedInventory().getType().equals(InventoryType.PLAYER)){
+                if(event.getSlotType().equals(InventoryType.SlotType.ARMOR)){
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+            if(event.getClickedInventory().getType().equals(InventoryType.BARREL)&&event.getClick().isLeftClick()){
+                event.setCancelled(true);
+                ItemStack tobuy = new ItemStack(event.getCurrentItem());
+                int price =0;
+                if(tobuy.getType().equals(Material.LIGHT_GRAY_STAINED_GLASS_PANE)){
+                    return;
+                }
+                if(tobuy.getType().equals(Material.WOODEN_SWORD)){
+                    price =4;
+                }else if(tobuy.getType().equals(Material.IRON_CHESTPLATE)){
+                    price=(int) Math.pow(2,protection.get(p)+1);
+                    if(price>16){
+                        p.sendMessage(ChatColor.RED+"You have already bought this item!");
+                       return;
+                    }
+                }else if(tobuy.getType().equals(Material.GOLDEN_PICKAXE)){
+                    price=(int) Math.pow(2,haste.get(p)+1);
+                    if(price>4){
+                        p.sendMessage(ChatColor.RED+"You have already bought this item!");
+                        return;
+                    }
+                }else{
+                    price=1;
+                }
+                if(p.getInventory().containsAtLeast(new ItemStack(Material.DIAMOND,price),price)) {
+                    if(tobuy.getType().equals(Material.WOODEN_SWORD)){
+                     if(!sharp.get(p)){
+                         sharp.put(p,true);
+                         p.getInventory().removeItem(new ItemStack(Material.DIAMOND,price));
+                         p.updateInventory();
+                     }else{
+                        p.sendMessage(ChatColor.RED+"You already have this item!");
+                     }
+                    }
+                    if(tobuy.getType().equals(Material.IRON_CHESTPLATE)){
+                        if(protection.get(p)<4){
+                           protection.put(p,protection.get(p)+1);
+                            p.getInventory().removeItem(new ItemStack(Material.DIAMOND,price));
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You already have this item!");
+                        }
+                    }
+                    if(tobuy.getType().equals(Material.GOLDEN_PICKAXE)){
+                        if(haste.get(p)<2){
+                            haste.put(p,haste.get(p)+1);
+                            p.getInventory().removeItem(new ItemStack(Material.DIAMOND,price));
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You already have this item!");
+                        }
+                    }
+                    if(tobuy.getType().equals(Material.EMERALD)){
+                        if(!heal.get(p)){
+                            heal.put(p,true);
+                            p.getInventory().removeItem(new ItemStack(Material.DIAMOND,price));
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You already have this item!");
+                        }
+                    }
+                    if(tobuy.getType().equals(Material.COAL)){
+                        if(!(miner.get(p)||slow.get(p)||counttrap.get(p))){
+                            slow.put(p,true);
+                            p.getInventory().removeItem(new ItemStack(Material.DIAMOND,price));
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You already have a trap!");
+                        }
+                    }
+                    if(tobuy.getType().equals(Material.FEATHER)){
+                        if(!(miner.get(p)||slow.get(p)||counttrap.get(p))){
+                            counttrap.put(p,true);
+                            p.getInventory().removeItem(new ItemStack(Material.DIAMOND,price));
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You already have a trap!");
+                        }
+                    }
+                    if(tobuy.getType().equals(Material.PRISMARINE)){
+                        if(!(miner.get(p)||slow.get(p)||counttrap.get(p))){
+                            miner.put(p,true);
+                            p.getInventory().removeItem(new ItemStack(Material.DIAMOND,price));
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You already have a trap!");
+                        }
+                    }
+                    if(sharp.get(p)){
+                        for(ItemStack i: p.getInventory().getContents()){
+                            if(i!=null&& (i.getType().toString().toLowerCase().contains("axe")||i.getType().toString().toLowerCase().contains("sword"))){
+                                ItemMeta meta = i.getItemMeta();
+                                meta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
+                                i.setItemMeta(meta);
+                                p.updateInventory();
+                            }
+                        }
+                        for(ItemStack i: p.getEnderChest().getContents()){
+                            if(i!=null&&(i.getType().toString().toLowerCase().contains("axe")||i.getType().toString().toLowerCase().contains("sword"))){
+                                ItemMeta meta = i.getItemMeta();
+                                meta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
+                                i.setItemMeta(meta);
+                                p.updateInventory();
+                            }
+                        }
+                    }
+                    if(protection.get(p)>0){
+                        for(ItemStack i: p.getInventory().getArmorContents()){
+                            i.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protection.get(p));
+                            p.updateInventory();
+
+                        }
+                    }
+                }else{
+                    p.sendMessage(ChatColor.RED+"You cannot afford this item!");
+                }
+
+
+
+            }
+            if(event.getClickedInventory().getType().equals(InventoryType.CHEST)&&event.getClick().isLeftClick()){
+                ItemStack tobuy = new ItemStack(event.getCurrentItem());
+                if(tobuy.getType().equals(Material.COMPASS)){
+                    for(Player players: getServer().getOnlinePlayers()){
+                        if(!players.equals(p)&&hasBed.get(players)){
+                            event.setCancelled(true);
+                            p.sendMessage(ChatColor.RED+"You cannot buy a tracker while other players have a bed!");
+                            return;
+                        }
+                    }
+                }
+                int slot = event.getSlot();
+                event.setCancelled(true);
+                int[] price = itemprices.get(tobuy.toString());
+
+                ItemStack iron = new ItemStack(Material.IRON_INGOT,price[0]);
+
+                ItemStack gold = new ItemStack(Material.GOLD_INGOT,price[1]);
+                ItemStack emerald = new ItemStack(Material.EMERALD,price[2]);
+                if(tobuy.getType().equals(Material.WHITE_WOOL)){
+                    tobuy = new ItemStack(wool.get(p), 16);
+                }
+                if(tobuy.getType().equals(Material.STONE_AXE)||tobuy.getType().equals(Material.IRON_PICKAXE)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.DIG_SPEED, 1, true);
+                    meta.setUnbreakable(true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.IRON_AXE)||tobuy.getType().equals(Material.GOLDEN_PICKAXE)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.DIG_SPEED, 2, true);
+                    meta.setUnbreakable(true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.NETHERITE_AXE)||tobuy.getType().equals(Material.DIAMOND_PICKAXE)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.DIG_SPEED, 3, true);
+                    meta.setUnbreakable(true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.CROSSBOW)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.PIERCING, 4, true);
+                    meta.addEnchant(Enchantment.QUICK_CHARGE, 2, true);
+                    meta.addEnchant(Enchantment.MULTISHOT,1, true);
+                    meta.setUnbreakable(true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.FISHING_ROD)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.BOW)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.ARROW_DAMAGE, 2, true);
+                    if(slot==31){
+                        meta.addEnchant(Enchantment.ARROW_KNOCKBACK,2,true);
+                    }
+                    meta.setUnbreakable(true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.TRIDENT)){
+                    ItemMeta meta = tobuy.getItemMeta();
+                    meta.addEnchant(Enchantment.RIPTIDE, 5, true);
+                    meta.setUnbreakable(true);
+                    tobuy.setItemMeta(meta);
+                }
+                if(tobuy.getType().equals(Material.ELYTRA)){
+                    tobuy.setDurability((short)429);
+                    if(p.getInventory().getChestplate().getType().equals(Material.ELYTRA)){
+                        p.sendMessage(ChatColor.RED+"You already have this item!");
+                        return;
+                    }
+                }
+                if(p.getInventory().containsAtLeast(iron,price[0])){
+                    if (tobuy.getType().equals(Material.CHAINMAIL_BOOTS)) {
+                        ItemStack[] stack = { new ItemStack(Material.CHAINMAIL_BOOTS),
+                                new ItemStack(Material.CHAINMAIL_LEGGINGS),
+                                new ItemStack(Material.CHAINMAIL_CHESTPLATE),
+                                new ItemStack(Material.CHAINMAIL_HELMET), };
+                        if(!Arrays.equals(armor.get(p),stack)&&!((p.getInventory().getBoots().getType().equals(Material.DIAMOND_BOOTS))||(p.getInventory().getBoots().getType().equals(Material.IRON_BOOTS)))){
+                            armor.put(p,stack);
+                            PlayerInventory inv = p.getInventory();
+                            inv.setArmorContents(stack);
+                            p.getInventory().removeItem(iron);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this or something better.");
+                        }
+                    }else if(tobuy.getType().equals(Material.SHEARS)){
+                        if(!hasshears.get(p)){
+                            p.getInventory().addItem(new ItemStack(Material.SHEARS));
+                            hasshears.put(p,true);
+                            p.getInventory().removeItem(iron);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this");
+                        }
+
+                    }else{
+                        if(tobuy.getType().equals(Material.WOODEN_AXE)||tobuy.getType().equals(Material.STONE_AXE)||tobuy.getType().equals(Material.IRON_AXE)||tobuy.getType().equals(Material.NETHERITE_AXE)){
+                            hasaxe.put(p,true);
+                        }
+                        if(tobuy.getType().equals(Material.WOODEN_PICKAXE)||tobuy.getType().equals(Material.IRON_PICKAXE)||tobuy.getType().equals(Material.GOLDEN_PICKAXE)||tobuy.getType().equals(Material.DIAMOND_PICKAXE)){
+                            haspick.put(p,true);
+                        }
+                        p.getInventory().removeItem(iron);
+                        p.getInventory().addItem(tobuy);
+                        p.updateInventory();
+                    }
+
+                }else if(event.getWhoClicked().getInventory().containsAtLeast(gold,price[1])){
+
+                    if (tobuy.getType().equals(Material.IRON_BOOTS)) {
+                        ItemStack[] stack = { new ItemStack(Material.IRON_BOOTS),
+                                new ItemStack(Material.IRON_LEGGINGS),
+                                new ItemStack(Material.IRON_CHESTPLATE),
+                                new ItemStack(Material.IRON_HELMET), };
+                        if(!Arrays.equals(armor.get(p),stack)&&!(p.getInventory().getBoots().getType().equals(Material.DIAMOND_BOOTS))){
+                            armor.put(p,stack);
+                            PlayerInventory inv = p.getInventory();
+                            inv.setArmorContents(stack);
+                            p.getInventory().removeItem(gold);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this or something better.");
+                        }
+                    }else if(tobuy.getType().equals(Material.SHIELD)){
+                        if(!hasshield.get(p)){
+                            p.getInventory().setItemInOffHand(new ItemStack(Material.SHIELD));
+                            hasshield.put(p,true);
+                            p.getInventory().removeItem(gold);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this");
+                        }
+
+                    }
+                    else{
+                        if(tobuy.getType().equals(Material.WOODEN_AXE)||tobuy.getType().equals(Material.STONE_AXE)||tobuy.getType().equals(Material.IRON_AXE)||tobuy.getType().equals(Material.NETHERITE_AXE)){
+                            hasaxe.put(p,true);
+                        }
+                        if(tobuy.getType().equals(Material.WOODEN_PICKAXE)||tobuy.getType().equals(Material.IRON_PICKAXE)||tobuy.getType().equals(Material.GOLDEN_PICKAXE)||tobuy.getType().equals(Material.DIAMOND_PICKAXE)){
+                            haspick.put(p,true);
+                        }
+                        p.getInventory().removeItem(gold);
+                        p.getInventory().addItem(tobuy);
+                        p.updateInventory();
+                    }
+                }else if(event.getWhoClicked().getInventory().containsAtLeast(emerald,price[2])){
+                    if (tobuy.getType().equals(Material.DIAMOND_BOOTS)) {
+                        ItemStack[] stack = { new ItemStack(Material.DIAMOND_BOOTS),
+                                new ItemStack(Material.DIAMOND_LEGGINGS),
+                                new ItemStack(Material.DIAMOND_CHESTPLATE),
+                                new ItemStack(Material.DIAMOND_HELMET), };
+
+                        if(!Arrays.equals(armor.get(p),stack)){
+                            armor.put(p,stack);
+                            PlayerInventory inv = p.getInventory();
+                            inv.setArmorContents(stack);
+                            p.getInventory().removeItem(emerald);
+                            p.updateInventory();
+                        }else{
+                            p.sendMessage(ChatColor.RED+"You've already bought this.");
+                        }
+                    }else if (tobuy.getType().equals(Material.ELYTRA)){
+                        p.getInventory().setChestplate(tobuy);
+                        p.getInventory().removeItem(emerald);
+                        p.updateInventory();
+                    } else{
+                        if(tobuy.getType().equals(Material.WOODEN_AXE)||tobuy.getType().equals(Material.STONE_AXE)||tobuy.getType().equals(Material.IRON_AXE)||tobuy.getType().equals(Material.NETHERITE_AXE)){
+                            hasaxe.put(p,true);
+                        }
+                        if(tobuy.getType().equals(Material.WOODEN_PICKAXE)||tobuy.getType().equals(Material.IRON_PICKAXE)||tobuy.getType().equals(Material.GOLDEN_PICKAXE)||tobuy.getType().equals(Material.DIAMOND_PICKAXE)){
+                            haspick.put(p,true);
+                        }
+                        p.getInventory().removeItem(emerald);
+                        p.getInventory().addItem(tobuy);
+                        p.updateInventory();
+                    }
+
+                }else{
+                    event.getWhoClicked().sendMessage(ChatColor.RED+"You cannot afford this item!");
+                }
+
+
+            }
+            else if(event.getClickedInventory().getType().equals(InventoryType.CHEST)){
+                event.setCancelled(true);
+            }
+        }
+
+    }
+    @EventHandler
+    public void onArrowHit(ProjectileHitEvent event) {
+        if(event.getEntity() instanceof Fireball){
+            getServer().getWorld("world").createExplosion(event.getEntity().getLocation(),4);
+        };
+    }
+    @EventHandler
+    public void glass(BlockDamageEvent event){
+        if(event.getBlock().getType().equals(Material.NETHERITE_BLOCK)){
+            event.setInstaBreak(true);
+        }
+    }
+    @EventHandler
+    public void damage(EntityDamageEvent event){
+        if(event.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)){
+            event.setDamage(10);
+        }
+        if(event.getCause().equals(EntityDamageEvent.DamageCause.BLOCK_EXPLOSION)){
+            event.setDamage(4);
+        }
+    }
+    @EventHandler
+    public void onHit(EntityDamageByEntityEvent event){
+        Entity damager = event.getDamager();
+        Entity damageTaker = event.getEntity();
+
+        if (damageTaker instanceof Player) {
+
+            Player taker = (Player) damageTaker;
+            if (damager instanceof Player) {
+
+                for(PotionEffect effect :taker.getActivePotionEffects()){
+                    if(effect.getType().equals(PotionEffectType.INVISIBILITY)){
+                        taker.removePotionEffect(PotionEffectType.INVISIBILITY);
+                        ItemStack[] parm = armor.get(taker);
+                        taker.getInventory().setBoots(parm[0]);
+                        taker.getInventory().setLeggings(parm[1]);
+                        taker.getInventory().setChestplate(parm[2]);
+                        taker.getInventory().setHelmet(parm[3]);
+                        if(hasshield.get(taker)){
+                            taker.getInventory().setItemInOffHand(new ItemStack(Material.SHIELD,1));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    @EventHandler
+    public void onInvis(PlayerItemConsumeEvent event){
+        int slot= event.getPlayer().getInventory().getHeldItemSlot();
+
+        if(event.getItem().getType().equals(Material.POTION)){
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+
+                public void run() {
+                    event.getPlayer().getInventory().setItem(slot,new ItemStack(Material.AIR,1));
+                    event.getPlayer().updateInventory();
+
+                }},20L);
+            event.getPlayer().updateInventory();
+            PotionMeta meta = (PotionMeta)event.getItem().getItemMeta();
+
+                if(meta.getCustomEffects().get(0).getType().equals(PotionEffectType.INVISIBILITY)){
+                    Player p = event.getPlayer();
+                    p.getInventory().setHelmet(new ItemStack(Material.AIR, 1));
+                    p.getInventory().setChestplate(new ItemStack(Material.AIR, 1));
+                    p.getInventory().setLeggings(new ItemStack(Material.AIR, 1));
+                    p.getInventory().setBoots(new ItemStack(Material.AIR, 1));
+                    p.getInventory().setItemInOffHand(new ItemStack(Material.AIR, 1));
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+
+                        public void run() {
+
+
+                            ItemStack[] parm = armor.get(p);
+                            p.getInventory().setBoots(parm[0]);
+                            p.getInventory().setLeggings(parm[1]);
+                            p.getInventory().setChestplate(parm[2]);
+                            p.getInventory().setHelmet(parm[3]);
+                            if(hasshield.get(p)){
+                                p.getInventory().setItemInOffHand(new ItemStack(Material.SHIELD,1));
+                            }
+                        }},600L);
+                }
+
+
+        }
+
+
+    }
+    HashSet<Block> playerPlaced = new HashSet<>();
+    HashMap<String, Color> colorMap = new HashMap<>();
+    @EventHandler
+    public void bedBreak(BlockBreakEvent event){
+        Player breaker = event.getPlayer();
+        if(event.getBlock().getType().toString().contains("BED")){
+
+
+            String color = event.getBlock().getType().toString().substring(0,event.getBlock().getType().toString().indexOf('_'));
+            if(color.equalsIgnoreCase("PINK")){
+                color="FUCHSIA";
+            }
+            if(color.equalsIgnoreCase("CYAN")){
+                color = "AQUA";
+            }
+           Color bedColor = colorMap.get(color);
+           Player broken = assign.get(bedColor);
+           if(broken.equals(breaker)){
+               broken.sendMessage(ChatColor.RED+"You Cannot Break Your Own Bed!");
+               event.setCancelled(true);
+
+
+           }else{
+               broken.sendTitle("BED DESTROYED"+ChatColor.RED,"You no longer will respawn!",10,20,10);
+               hasBed.put(broken,false);
+               Bukkit.broadcastMessage((chatcolors.get(breaker)+breaker.getDisplayName())+ (ChatColor.WHITE+" broke ")+(chatcolors.get(broken)+broken.getDisplayName())+(ChatColor.WHITE+"'s bed."));
+               board.getObjective("test").unregister();
+               Objective objective = board.registerNewObjective("test", "dummy");
+               objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+               objective.setDisplayName("Welcome To Bedwars!");
+               for(Player p: getServer().getOnlinePlayers()){
+                   if(hasBed.get(p)){
+                       Score score = objective.getScore(entryMap.get(p));
+                       score.setScore(1);
+                   }else{
+                       Score score = objective.getScore(brokenEntryMap.get(p));
+                       score.setScore(1);
+                   }
+               }
+           }
+
+
+        }else{
+            if(!playerPlaced.contains(event.getBlock())&&!event.getBlock().getType().equals(Material.FIRE)){
+                event.getPlayer().sendMessage(ChatColor.RED+"You cannot break non-player placed blocks");
+                event.setCancelled(true);
+            }else{
+                playerPlaced.remove(event.getBlock());
+            }
+        }
+    }
+    HashMap<Integer, Player> golemMap = new HashMap<>();
+    @EventHandler
+    public void chat (PlayerChatEvent event){
+        Bukkit.broadcastMessage((chatcolors.get(event.getPlayer())+event.getPlayer().getDisplayName()+": ")+event.getMessage());
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void fireball(PlayerInteractEvent event){
+        if((event.getAction().equals(Action.RIGHT_CLICK_BLOCK))&&(event.getHand()!=null)&&event.getPlayer().getInventory().getItem(event.getHand()).getType().equals(Material.GHAST_SPAWN_EGG)){
+            golemMap.put(0,event.getPlayer());
+            event.setCancelled(true);
+            getServer().getWorlds().get(0).spawnEntity(event.getClickedBlock().getLocation().add(0,1,0),EntityType.IRON_GOLEM);
+            event.getPlayer().getInventory().removeItem(new ItemStack(Material.GHAST_SPAWN_EGG));
+            event.getPlayer().updateInventory();
+
+
+        }
+        if((event.getAction().equals(Action.RIGHT_CLICK_AIR)||event.getAction().equals(Action.RIGHT_CLICK_BLOCK))&&(event.getHand()!=null)&&event.getPlayer().getInventory().getItem(event.getHand()).getType().equals(Material.FIRE_CHARGE)){
+            event.setCancelled(true);
+            Fireball fireball = new Fireball() {
+                @Override
+                public void setDirection(Vector direction) {
+
+
+                }
+
+                @Override
+                public Vector getDirection() {
+                    return null;
+                }
+
+                @Override
+                public void setYield(float yield) {
+
+                }
+
+                @Override
+                public float getYield() {
+                    return 5;
+                }
+
+                @Override
+                public void setIsIncendiary(boolean isIncendiary) {
+
+                }
+
+                @Override
+                public boolean isIncendiary() {
+                    return true;
+                }
+
+                @Override
+                public ProjectileSource getShooter() {
+                    return null;
+                }
+
+                @Override
+                public void setShooter(ProjectileSource source) {
+
+                }
+
+                @Override
+                public boolean doesBounce() {
+                    return false;
+                }
+
+                @Override
+                public void setBounce(boolean doesBounce) {
+
+                }
+
+                @Override
+                public Location getLocation() {
+                    return null;
+                }
+
+                @Override
+                public Location getLocation(Location loc) {
+                    return null;
+                }
+
+                @Override
+                public void setVelocity(Vector velocity) {
+
+                }
+
+                @Override
+                public Vector getVelocity() {
+                    return null;
+                }
+
+                @Override
+                public double getHeight() {
+                    return 0;
+                }
+
+                @Override
+                public double getWidth() {
+                    return 0;
+                }
+
+                @Override
+                public BoundingBox getBoundingBox() {
+                    return null;
+                }
+
+                @Override
+                public boolean isOnGround() {
+                    return false;
+                }
+
+                @Override
+                public boolean isInWater() {
+                    return false;
+                }
+
+                @Override
+                public World getWorld() {
+                    return null;
+                }
+
+                @Override
+                public void setRotation(float yaw, float pitch) {
+
+                }
+
+                @Override
+                public boolean teleport(Location location) {
+                    return false;
+                }
+
+                @Override
+                public boolean teleport(Location location, PlayerTeleportEvent.TeleportCause cause) {
+                    return false;
+                }
+
+                @Override
+                public boolean teleport(Entity destination) {
+                    return false;
+                }
+
+                @Override
+                public boolean teleport(Entity destination, PlayerTeleportEvent.TeleportCause cause) {
+                    return false;
+                }
+
+                @Override
+                public List<Entity> getNearbyEntities(double x, double y, double z) {
+                    return null;
+                }
+
+                @Override
+                public int getEntityId() {
+                    return 0;
+                }
+
+                @Override
+                public int getFireTicks() {
+                    return 0;
+                }
+
+                @Override
+                public int getMaxFireTicks() {
+                    return 0;
+                }
+
+                @Override
+                public void setFireTicks(int ticks) {
+
+                }
+
+                @Override
+                public void remove() {
+
+                }
+
+                @Override
+                public boolean isDead() {
+                    return false;
+                }
+
+                @Override
+                public boolean isValid() {
+                    return false;
+                }
+
+                @Override
+                public Server getServer() {
+                    return null;
+                }
+
+                @Override
+                public boolean isPersistent() {
+                    return false;
+                }
+
+                @Override
+                public void setPersistent(boolean persistent) {
+
+                }
+
+                @Override
+                public Entity getPassenger() {
+                    return null;
+                }
+
+                @Override
+                public boolean setPassenger(Entity passenger) {
+                    return false;
+                }
+
+                @Override
+                public List<Entity> getPassengers() {
+                    return null;
+                }
+
+                @Override
+                public boolean addPassenger(Entity passenger) {
+                    return false;
+                }
+
+                @Override
+                public boolean removePassenger(Entity passenger) {
+                    return false;
+                }
+
+                @Override
+                public boolean isEmpty() {
+                    return false;
+                }
+
+                @Override
+                public boolean eject() {
+                    return false;
+                }
+
+                @Override
+                public float getFallDistance() {
+                    return 0;
+                }
+
+                @Override
+                public void setFallDistance(float distance) {
+
+                }
+
+                @Override
+                public void setLastDamageCause(EntityDamageEvent event) {
+
+                }
+
+                @Override
+                public EntityDamageEvent getLastDamageCause() {
+                    return null;
+                }
+
+                @Override
+                public UUID getUniqueId() {
+                    return null;
+                }
+
+                @Override
+                public int getTicksLived() {
+                    return 0;
+                }
+
+                @Override
+                public void setTicksLived(int value) {
+
+                }
+
+                @Override
+                public void playEffect(EntityEffect type) {
+
+                }
+
+                @Override
+                public EntityType getType() {
+                    return null;
+                }
+
+                @Override
+                public boolean isInsideVehicle() {
+                    return false;
+                }
+
+                @Override
+                public boolean leaveVehicle() {
+                    return false;
+                }
+
+                @Override
+                public Entity getVehicle() {
+                    return null;
+                }
+
+                @Override
+                public void setCustomNameVisible(boolean flag) {
+
+                }
+
+                @Override
+                public boolean isCustomNameVisible() {
+                    return false;
+                }
+
+                @Override
+                public void setGlowing(boolean flag) {
+
+                }
+
+                @Override
+                public boolean isGlowing() {
+                    return false;
+                }
+
+                @Override
+                public void setInvulnerable(boolean flag) {
+
+                }
+
+                @Override
+                public boolean isInvulnerable() {
+                    return false;
+                }
+
+                @Override
+                public boolean isSilent() {
+                    return false;
+                }
+
+                @Override
+                public void setSilent(boolean flag) {
+
+                }
+
+                @Override
+                public boolean hasGravity() {
+                    return false;
+                }
+
+                @Override
+                public void setGravity(boolean gravity) {
+
+                }
+
+                @Override
+                public int getPortalCooldown() {
+                    return 0;
+                }
+
+                @Override
+                public void setPortalCooldown(int cooldown) {
+
+                }
+
+                @Override
+                public Set<String> getScoreboardTags() {
+                    return null;
+                }
+
+                @Override
+                public boolean addScoreboardTag(String tag) {
+                    return false;
+                }
+
+                @Override
+                public boolean removeScoreboardTag(String tag) {
+                    return false;
+                }
+
+                @Override
+                public PistonMoveReaction getPistonMoveReaction() {
+                    return null;
+                }
+
+                @Override
+                public BlockFace getFacing() {
+                    return null;
+                }
+
+                @Override
+                public Pose getPose() {
+                    return null;
+                }
+
+                @Override
+                public Spigot spigot() {
+                    return null;
+                }
+
+                @Override
+                public String getCustomName() {
+                    return null;
+                }
+
+                @Override
+                public void setCustomName(String name) {
+
+                }
+
+                @Override
+                public void sendMessage(String message) {
+
+                }
+
+                @Override
+                public void sendMessage(String[] messages) {
+
+                }
+
+                @Override
+                public void sendMessage(UUID sender, String message) {
+
+                }
+
+                @Override
+                public void sendMessage(UUID sender, String[] messages) {
+
+                }
+
+                @Override
+                public String getName() {
+                    return null;
+                }
+
+                @Override
+                public void setMetadata(String metadataKey, MetadataValue newMetadataValue) {
+
+                }
+
+                @Override
+                public List<MetadataValue> getMetadata(String metadataKey) {
+                    return null;
+                }
+
+                @Override
+                public boolean hasMetadata(String metadataKey) {
+                    return false;
+                }
+
+                @Override
+                public void removeMetadata(String metadataKey, Plugin owningPlugin) {
+
+                }
+
+                @Override
+                public boolean isPermissionSet(String name) {
+                    return false;
+                }
+
+                @Override
+                public boolean isPermissionSet(Permission perm) {
+                    return false;
+                }
+
+                @Override
+                public boolean hasPermission(String name) {
+                    return false;
+                }
+
+                @Override
+                public boolean hasPermission(Permission perm) {
+                    return false;
+                }
+
+                @Override
+                public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value) {
+                    return null;
+                }
+
+                @Override
+                public PermissionAttachment addAttachment(Plugin plugin) {
+                    return null;
+                }
+
+                @Override
+                public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value, int ticks) {
+                    return null;
+                }
+
+                @Override
+                public PermissionAttachment addAttachment(Plugin plugin, int ticks) {
+                    return null;
+                }
+
+                @Override
+                public void removeAttachment(PermissionAttachment attachment) {
+
+                }
+
+                @Override
+                public void recalculatePermissions() {
+
+                }
+
+                @Override
+                public Set<PermissionAttachmentInfo> getEffectivePermissions() {
+                    return null;
+                }
+
+                @Override
+                public boolean isOp() {
+                    return false;
+                }
+
+                @Override
+                public void setOp(boolean value) {
+
+                }
+
+                @Override
+                public PersistentDataContainer getPersistentDataContainer() {
+                    return null;
+                }
+            };
+            fireball.setDirection(event.getPlayer().getEyeLocation().getDirection());
+            getServer().getWorlds().get(0).spawn(event.getPlayer().getEyeLocation().add(event.getPlayer().getEyeLocation().getDirection()),fireball.getClass());
+            event.getPlayer().getInventory().removeItem(new ItemStack(Material.FIRE_CHARGE));
+            event.getPlayer().updateInventory();
+        }
+    }
+    public boolean isValid(Location l){
+        if(l.getY()>85){
+            return false;
+        }
+        for(Location d: diamond){
+            if(l.distance(d)<4){
+                return false;
+            }
+        }
+        for(Location e:emerald){
+            if(l.distance(e)<4){
+                return false;
+            }
+        }
+        for(Location i: iron){
+            if(l.distance(i)<10){
+                return false;
+            }
+        }
+        return true;
+    }
+    @EventHandler
+    public void tnt(BlockPlaceEvent event){
+        if(isValid(event.getBlock().getLocation())){
+        playerPlaced.add(event.getBlock());
+        if(event.getBlockPlaced().getType().equals(Material.TNT)){
+            Location location = event.getBlockPlaced().getLocation();
+            event.getBlockPlaced().setType(Material.AIR);
+            event.getBlockPlaced().getWorld().spawn(location, TNTPrimed.class);
+        }
+        if(event.getBlockPlaced().getType().equals(Material.SPONGE)) {
+            List<Location> locations = new ArrayList<>();
+            for (int f = 1; f < 10; f++) {
+                for (double i = 0; i <= Math.PI; i += Math.PI / (3 * f)) {
+                    double radius = Math.sin(i) * f;
+                    double y = Math.cos(i) * f;
+                    for (double a = 0; a < Math.PI * 2; a += Math.PI / (5 * f)) {
+                        double x = Math.cos(a) * radius;
+                        double z = Math.sin(a) * radius;
+                        locations.add(event.getBlock().getLocation().add(new Location(getServer().getWorlds().get(0), x, y, z)));
+
+
+                    }
+                }
+            }
+
+
+            for (Location L : locations) {
+                Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(255, 255, 255), 7);
+                getServer().getWorlds().get(0).spawnParticle(Particle.REDSTONE, L.getX(), L.getY(), L.getZ(), 1, 0.0, 0.0, 0.0, 0.0, dustOptions, true);
+            }
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+
+                public void run() {
+                    event.getBlockPlaced().setType(Material.AIR);
+                }
+            }, 100L);
+
+        }
+        }else{
+            event.setCancelled(true);
+            event.getPlayer().sendMessage(ChatColor.RED+"You cannot place blocks here!");
+        }
+    }
+
+    @EventHandler
+    public void OnSilverFirshSpawn(EntitySpawnEvent event){
+        if(event.getEntityType().equals(EntityType.SILVERFISH)){
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                public void run() {
+                    Location loc = event.getEntity().getLocation();
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).strikeLightning(loc);
+                    getServer().getWorlds().get(0).createExplosion(event.getEntity().getLocation(),4);
+                }
+            }, 100L);
+        }
+        if(event.getEntityType().equals(EntityType.IRON_GOLEM)){
+            golemMap.put(event.getEntity().getEntityId(), golemMap.get(0));
+            event.getEntity().setCustomName("Team: "+team.get(golemMap.get(event.getEntity().getEntityId())).getName()+chatcolors.get(golemMap.get(event.getEntity().getEntityId())));
+            event.getEntity().setCustomNameVisible(true);
+            if(event.getEntity() instanceof IronGolem){
+                IronGolem golem = (IronGolem)event.getEntity();
+                golem.setPlayerCreated(false);
+                golem.damage(60);
+            }
+            Bukkit.getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    if(event.getEntity() instanceof IronGolem){
+                        IronGolem golem = (IronGolem)event.getEntity();
+                        Player closest=getServer().getOnlinePlayers().iterator().next();
+                        double max = Double.MAX_VALUE;
+                        for(Player p: getServer().getOnlinePlayers()){
+                            if(!p.equals(golemMap.get(event.getEntity().getEntityId()))) {
+                                if (max > golem.getLocation().distance(p.getLocation())) {
+                                    max = golem.getLocation().distance(p.getLocation());
+                                    closest = p;
+                                }
+                            }
+                        }
+
+                        golem.damage(1,closest);
+                    }
+
+                }
+            }, 0L, 40L);
+        }
+
+    }
+
+    @EventHandler
+    public void onThrow(ProjectileLaunchEvent event) {
+        if(event.getEntityType().equals(EntityType.SNOWBALL)){
+            Location init = event.getEntity().getLocation();
+            int time =100;
+
+            Location[] trajectory = new Location[time*20];
+            double x = init.getX();
+            double y = init.getY();
+            double z = init.getZ();
+            double vx = event.getEntity().getVelocity().getX();
+            double vy = event.getEntity().getVelocity().getY();
+            double vz = event.getEntity().getVelocity().getZ();
+            World world = getServer().getWorlds().get(0);
+            trajectory[0]= new Location(world,x,y,z);
+            getServer().broadcastMessage("X: "+vx+" Y: "+vy+" Z: "+vz);
+            for(int i=1; i<time*20; i++){
+                x=x+vx;
+                y=y+vy;
+                z=z+vz;
+                vx = vx *(0.99);
+                vy = vy *(0.99);
+                vz = vz *(0.99);
+                vy=vy-0.03;
+                trajectory[i]= new Location(world,x,y,z);
+            }
+            Location spot = event.getLocation();
+            for(int i=2; i<time*20; i++){
+                if(!trajectory[i].getBlock().getType().equals(Material.AIR)&&!trajectory[i].getBlock().getType().equals(Material.CAVE_AIR)&&!trajectory[i].getBlock().getType().equals(Material.VOID_AIR)){
+                    spot = new Location(world, trajectory[i].getX(),trajectory[i].getY()+1.0,trajectory[i].getZ());
+                    break;
+                };
+
+            }
+            world.spawn(spot,Silverfish.class);
+
+        }
+        if(event.getEntityType().equals(EntityType.EGG)){
+            Location init = event.getEntity().getLocation();
+            int time =2;
+
+            Location[] trajectory = new Location[time*20];
+            double x = init.getX();
+            double y = init.getY();
+            double z = init.getZ();
+            double vx = event.getEntity().getVelocity().getX();
+            double vy = event.getEntity().getVelocity().getY();
+            double vz = event.getEntity().getVelocity().getZ();
+            World world = getServer().getWorlds().get(0);
+            trajectory[0]= new Location(world,x,y,z);
+            getServer().broadcastMessage("X: "+vx+" Y: "+vy+" Z: "+vz);
+            for(int i=1; i<time*20; i++){
+                x=x+vx;
+                y=y+vy;
+                z=z+vz;
+                vx = vx *(0.99);
+                vy = vy *(0.99);
+                vz = vz *(0.99);
+                vy=vy-0.03;
+                trajectory[i]= new Location(world,x,y,z);
+            }
+            for(int i=2; i<time*20; i++){
+                double Ex = trajectory[i].getX();
+                double Ey = trajectory[i].getY();
+                double Ez = trajectory[i].getZ();
+                Location L1 = new Location(world,Ex,Ey,Ez);
+                Location L2 = new Location(world,Ex-1,Ey,Ez);
+                Location L3 = new Location(world,Ex+1,Ey,Ez);
+                Location L4 = new Location(world,Ex,Ey,Ez-1);
+                Location L5 = new Location(world,Ex-1,Ey,Ez-1);
+                Location L6 = new Location(world,Ex+1,Ey,Ez-1);
+                Location L7 = new Location(world,Ex,Ey,Ez+1);
+                Location L8 = new Location(world,Ex-1,Ey,Ez+1);
+                Location L9 = new Location(world,Ex+1,Ey,Ez+1);
+
+                if(L1.getBlock().getType().equals(Material.AIR)||L1.getBlock().getType().equals(Material.CAVE_AIR)||L1.getBlock().getType().equals(Material.VOID_AIR)){
+                    L1.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L1.getBlock());
+                }
+                if(L2.getBlock().getType().equals(Material.AIR)||L2.getBlock().getType().equals(Material.CAVE_AIR)||L2.getBlock().getType().equals(Material.VOID_AIR)){
+                    L2.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L2.getBlock());
+                }
+                if(L3.getBlock().getType().equals(Material.AIR)||L3.getBlock().getType().equals(Material.CAVE_AIR)||L3.getBlock().getType().equals(Material.VOID_AIR)){
+                    L3.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L3.getBlock());
+                }
+                if(L4.getBlock().getType().equals(Material.AIR)||L4.getBlock().getType().equals(Material.CAVE_AIR)||L4.getBlock().getType().equals(Material.VOID_AIR)){
+                    L4.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L4.getBlock());
+                }
+                if(L5.getBlock().getType().equals(Material.AIR)||L5.getBlock().getType().equals(Material.CAVE_AIR)||L5.getBlock().getType().equals(Material.VOID_AIR)){
+                    L5.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L5.getBlock());
+                }
+                if(L6.getBlock().getType().equals(Material.AIR)||L6.getBlock().getType().equals(Material.CAVE_AIR)||L6.getBlock().getType().equals(Material.VOID_AIR)){
+                    L6.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L6.getBlock());
+                }
+                if(L7.getBlock().getType().equals(Material.AIR)||L7.getBlock().getType().equals(Material.CAVE_AIR)||L7.getBlock().getType().equals(Material.VOID_AIR)){
+                    L7.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L7.getBlock());
+                }
+                if(L8.getBlock().getType().equals(Material.AIR)||L8.getBlock().getType().equals(Material.CAVE_AIR)||L8.getBlock().getType().equals(Material.VOID_AIR)){
+                    L8.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L8.getBlock());
+                }
+                if(L9.getBlock().getType().equals(Material.AIR)||L9.getBlock().getType().equals(Material.CAVE_AIR)||L9.getBlock().getType().equals(Material.VOID_AIR)){
+                    L9.getBlock().setType(Material.WHITE_WOOL);
+                    playerPlaced.add(L9.getBlock());
+                }
+            }
+        }
+
+
+
+        }
+    @EventHandler
+    public void craft(CraftItemEvent event){
+        event.setCancelled(true);
+    }
+    @EventHandler
+    public void tnt (EntityExplodeEvent event){
+        List<Block> f = new ArrayList<>();
+        f.addAll(event.blockList());
+        for(Block b: f){
+            if(!playerPlaced.contains(b)){
+                event.blockList().remove(b);
+            }
+        }
+    }
+    @EventHandler
+    public void fireball (BlockExplodeEvent event){
+        List<Block> f = new ArrayList<>();
+        f.addAll(event.blockList());
+        for(Block b: f){
+            if(!playerPlaced.contains(b)){
+                event.blockList().remove(b);
+            }
+        }
+    }
+    @EventHandler
+    public void onDeath(PlayerDeathEvent event){
+        Location lMin = new Location(getServer().getWorld("world"), 0,3000,0);
+        Player target =event.getEntity();
+        for(Player wow:getServer().getOnlinePlayers()){
+            if(!event.getEntity().equals(wow)&&event.getEntity().getLocation().distance(wow.getLocation())<event.getEntity().getLocation().distance(lMin)&&event.getEntity().getGameMode().equals(GameMode.SURVIVAL)){
+                lMin=wow.getLocation();
+                target=wow;
+            }
+        }
+        List<ItemStack> f = event.getDrops();
+        boolean checked = false;
+        for(Player p: getServer().getOnlinePlayers()){
+            if(!p.equals(event.getEntity())&&event.getDeathMessage().contains(p.getDisplayName())&&target.getGameMode().equals(GameMode.SURVIVAL)){
+                checked=true;
+                for(ItemStack item : f){
+                    if(item.getType().equals(Material.EMERALD)){
+                        p.sendMessage(ChatColor.GREEN+"+"+item.getAmount()+" emeralds!");
+                        p.getInventory().addItem(item);
+                        p.updateInventory();
+                    }
+                    if(item.getType().equals(Material.DIAMOND)){
+                        p.sendMessage(ChatColor.BLUE+"+"+item.getAmount()+" diamonds!");
+                        p.getInventory().addItem(item);
+                        p.updateInventory();
+                    }
+                    if(item.getType().equals(Material.IRON_INGOT)){
+                        p.sendMessage(ChatColor.WHITE+"+"+item.getAmount()+" iron!");
+                        p.getInventory().addItem(item);
+                        p.updateInventory();
+                    }
+                    if(item.getType().equals(Material.GOLD_INGOT)){
+                        p.sendMessage(ChatColor.GOLD+"+"+item.getAmount()+" gold!");
+                        p.getInventory().addItem(item);
+                        p.updateInventory();
+                    }
+                }
+            }
+        }
+        if(!checked&&target.getGameMode().equals(GameMode.SURVIVAL)){
+            System.out.println(target.getDisplayName());
+            for(ItemStack item : f){
+                if(item.getType().equals(Material.EMERALD)){
+                    target.sendMessage(ChatColor.GREEN+"+"+item.getAmount()+" emeralds!");
+                    target.getInventory().addItem(item);
+                    target.updateInventory();
+                }
+                if(item.getType().equals(Material.DIAMOND)){
+                    target.sendMessage(ChatColor.BLUE+"+"+item.getAmount()+" diamonds!");
+                    target.getInventory().addItem(item);
+                    target.updateInventory();
+                }
+                if(item.getType().equals(Material.IRON_INGOT)){
+                    target.sendMessage(ChatColor.WHITE+"+"+item.getAmount()+" iron!");
+                    target.getInventory().addItem(item);
+                    target.updateInventory();
+                }
+                if(item.getType().equals(Material.GOLD_INGOT)){
+                    target.sendMessage(ChatColor.GOLD+"+"+item.getAmount()+" gold!");
+                    target.getInventory().addItem(item);
+                    target.updateInventory();
+                }
+            }
+        }
+        event.getDrops().clear();
+        if(hasBed.get(event.getEntity())){
+        Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+            @Override
+            public void run() {
+                event.getEntity().setGameMode(GameMode.SPECTATOR);
+                event.getEntity().spigot().respawn();
+                event.getEntity().teleport(new Location(getServer().getWorld("world"),0,90,0));
+            }
+        }, 2L);
+        }
+        else{
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    event.getEntity().setGameMode(GameMode.ADVENTURE);
+                    event.getEntity().spigot().respawn();
+                }
+            }, 2L);
+        }
+
+    }
+    @EventHandler
+    public void water (BlockFromToEvent event){
+        if(event.getToBlock().getType().equals(Material.BLACK_CARPET)){
+            event.setCancelled(true);
+        }
+        if(event.getToBlock().getType().equals(Material.STONE_BUTTON)){
+            event.setCancelled(true);
+        }
+    }
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event){
+        if(event.getPlayer().getGameMode().equals(GameMode.SURVIVAL)) {
+            ItemStack[] parm = armor.get(event.getPlayer());
+            event.getPlayer().getInventory().setBoots(parm[0]);
+            event.getPlayer().getInventory().setLeggings(parm[1]);
+            event.getPlayer().getInventory().setChestplate(parm[2]);
+            event.getPlayer().getInventory().setHelmet(parm[3]);
+            event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_SWORD, 1));
+            if (hasaxe.get(event.getPlayer())) {
+                event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_AXE, 1));
+            }
+            if (haspick.get(event.getPlayer())) {
+                event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_PICKAXE, 1));
+            }
+            if (hasshears.get(event.getPlayer())) {
+                event.getPlayer().getInventory().addItem(new ItemStack(Material.SHEARS, 1));
+            }
+            if (hasshield.get(event.getPlayer())) {
+                event.getPlayer().getInventory().setItemInOffHand(new ItemStack(Material.SHIELD, 1));
+            }
+        }if(event.getPlayer().getGameMode().equals(GameMode.SPECTATOR)){
+            event.getPlayer().sendTitle(ChatColor.RED+"YOU DIED", "Respawning in 5",5,10,5);
+
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    event.getPlayer().sendTitle(ChatColor.RED+"YOU DIED", "Respawning in 4",5,10,5);
+                    }
+                }, 20L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    event.getPlayer().sendTitle(ChatColor.RED+"YOU DIED", "Respawning in 3",5,10,5);
+                }
+            }, 40L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    event.getPlayer().sendTitle(ChatColor.RED+"YOU DIED", "Respawning in 2",5,10,5);
+                }
+            }, 60L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    event.getPlayer().sendTitle(ChatColor.RED+"YOU DIED", "Respawning in 1",5,10,5);
+                }
+            }, 80L);
+            Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+                @Override
+                public void run() {
+                    event.getPlayer().sendTitle(ChatColor.GOLD+"Respawned!", "Go Go Go",5,10,5);
+                    event.getPlayer().setGameMode(GameMode.SURVIVAL);
+                    event.getPlayer().teleport(generators.get(event.getPlayer()));
+                    ItemStack[] parm = armor.get(event.getPlayer());
+                    event.getPlayer().getInventory().setBoots(parm[0]);
+                    event.getPlayer().getInventory().setLeggings(parm[1]);
+                    event.getPlayer().getInventory().setChestplate(parm[2]);
+                    event.getPlayer().getInventory().setHelmet(parm[3]);
+                    event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_SWORD, 1));
+                    if (hasaxe.get(event.getPlayer())) {
+                        event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_AXE, 1));
+                    }
+                    if (haspick.get(event.getPlayer())) {
+                        event.getPlayer().getInventory().addItem(new ItemStack(Material.WOODEN_PICKAXE, 1));
+                    }
+                    if (hasshears.get(event.getPlayer())) {
+                        event.getPlayer().getInventory().addItem(new ItemStack(Material.SHEARS, 1));
+                    }
+                    if (hasshield.get(event.getPlayer())) {
+                        event.getPlayer().getInventory().setItemInOffHand(new ItemStack(Material.SHIELD, 1));
+                    }
+                    if(sharp.get(event.getPlayer())){
+                        for(ItemStack i: event.getPlayer().getInventory().getContents()){
+                            if(i!=null && (i.getType().toString().toLowerCase().contains("axe")||i.getType().toString().toLowerCase().contains("sword"))){
+                                ItemMeta meta = i.getItemMeta();
+                                meta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
+                                i.setItemMeta(meta);
+                                event.getPlayer().updateInventory();
+                            }
+                        }
+                        for(ItemStack i: event.getPlayer().getEnderChest().getContents()){
+                            if(i!=null && (i.getType().toString().toLowerCase().contains("axe")||i.getType().toString().toLowerCase().contains("sword"))){
+                                ItemMeta meta = i.getItemMeta();
+                                meta.addEnchant(Enchantment.DAMAGE_ALL, 2, true);
+                                i.setItemMeta(meta);
+                                event.getPlayer().updateInventory();
+                            }
+                        }
+                    }
+                    if(protection.get(event.getPlayer())>0){
+                        for(ItemStack i: event.getPlayer().getInventory().getArmorContents()){
+                            i.addEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, protection.get(event.getPlayer()));
+                            event.getPlayer().updateInventory();
+
+                        }
+                    }
+                }
+            }, 100L);
+
+
+        }
+        if(event.getPlayer().getGameMode().equals(GameMode.ADVENTURE)){
+            event.getPlayer().setGameMode(GameMode.SPECTATOR);
+            event.getPlayer().teleport(new Location(getServer().getWorld("world"),0,90,0));
+            event.getPlayer().sendTitle(ChatColor.RED+"YOU DIED", "Game Over",10,20,10);
+            ItemStack[] ender =event.getPlayer().getEnderChest().getContents();
+            if(ender.length>0){
+                for(ItemStack i: ender){
+                    if(i!=null){
+                        getServer().getWorld("world").dropItem(generators.get(event.getPlayer()),i);
+                    }
+
+                }
+            }
+            board.getObjective("test").getScore(brokenEntryMap.get(event.getPlayer())).setScore(0);
+        }
+
+    }
+
+    @Override
+    public void onDisable() {
+        for(Entity e: getServer().getWorld("world").getEntities()){
+            if(!e.getType().equals(EntityType.PLAYER)){
+                e.remove();
+            }
+        }
+        System.out.println("bye");
+    }
+}
+
+class start implements CommandExecutor {
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        Firework f = (Firework) getServer().getWorlds().get(0).spawn(new Location(getServer().getWorlds().get(0),0.0,90.0,0.0), Firework.class);
+        FireworkMeta fm = f.getFireworkMeta();
+        fm.addEffect(FireworkEffect.builder().flicker(false).trail(false).with(FireworkEffect.Type.BALL_LARGE)
+                .withColor(Color.BLUE, Color.AQUA).build());
+        fm.setPower(10);
+        f.setFireworkMeta(fm);
+        f.detonate();
+        return true;
+    }
+
+}
